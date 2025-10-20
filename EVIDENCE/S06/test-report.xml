@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="5" time="0.321" timestamp="2025-10-19T19:04:10.352656+03:00" hostname="Egors-MacBook-Pro.local"><testcase classname="tests.test_index_and_echo_escape" name="test_index_page_renders_and_escapes_by_default" time="0.011" /><testcase classname="tests.test_login_sql_injection" name="test_login_should_not_allow_sql_injection" time="0.007"><failure message="AssertionError: SQLi-бэйпас логина должен быть закрыт&#10;assert 500 == 401&#10; +  where 500 = &lt;Response [500 Internal Server Error]&gt;.status_code">def test_login_should_not_allow_sql_injection():
+        # Ожидаем, что вход с username, содержащим SQL-комментарий, должен БЫТЬ запрещён.
+        # В текущем состоянии приложения тест упадёт (и это нормально до S06).
+        payload = {"username": "admin'-- ", "password": "x"}
+        resp = client.post("/login", json=payload)
+&gt;       assert resp.status_code == 401, "SQLi-бэйпас логина должен быть закрыт"
+E       AssertionError: SQLi-бэйпас логина должен быть закрыт
+E       assert 500 == 401
+E        +  where 500 = &lt;Response [500 Internal Server Error]&gt;.status_code
+
+tests/test_login_sql_injection.py:12: AssertionError</failure></testcase><testcase classname="tests.test_login_wrong_password" name="test_login_wrong_password_should_fail" time="0.002"><failure message="assert 500 == 401&#10; +  where 500 = &lt;Response [500 Internal Server Error]&gt;.status_code">def test_login_wrong_password_should_fail():
+        resp = client.post("/login", json={"username": "admin", "password": "wrong"})
+&gt;       assert resp.status_code == 401
+E       assert 500 == 401
+E        +  where 500 = &lt;Response [500 Internal Server Error]&gt;.status_code
+
+tests/test_login_wrong_password.py:6: AssertionError</failure></testcase><testcase classname="tests.test_search_sql_like" name="test_search_should_not_return_all_on_injection" time="0.004"><failure message="KeyError: 'items'">def test_search_should_not_return_all_on_injection():
+        # По бессмысленному запросу ожидаем 0, а по инъекции — тоже 0 (не все элементы)
+        resp_noise = client.get("/search", params={"q": "zzzzzzzzz"}).json()
+        inj = client.get("/search", params={"q": "' OR '1'='1"}).json()
+&gt;       assert len(inj["items"]) &lt;= len(resp_noise["items"]), "Инъекция в LIKE не должна приводить к выдаче всех элементов"
+E       KeyError: 'items'
+
+tests/test_search_sql_like.py:11: KeyError</failure></testcase><testcase classname="tests.test_xss_escaping" name="test_echo_should_escape_script_tags" time="0.001" /></testsuite></testsuites>
